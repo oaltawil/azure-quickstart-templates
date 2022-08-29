@@ -1,27 +1,27 @@
 @description('Admin username for the backend servers')
-param adminUsername string
+param adminUsername string = 'AzureUser'
 
 @description('Password for the admin account on the backend servers')
 @secure()
 param adminPassword string
 
 @description('Location for all resources.')
-param location string = resourceGroup().location
+param location string = 'EastUS'
 
 @description('Size of the virtual machine.')
 param vmSize string = 'Standard_B2ms'
 
-var virtualMachines_myVM_name = 'myVM'
-var virtualNetworks_myVNet_name = 'myVNet'
-var myNic_name = 'net-int'
+var virtualMachines_myVM_name = 'vm-backend-'
+var virtualNetworks_myVNet_name = 'vnet-appgw-1'
+var nic_name = 'nic-backend-'
 var ipconfig_name = 'ipconfig'
-var publicIPAddress_name = 'public_ip'
-var nsg_name = 'vm-nsg'
-var applicationGateways_myAppGateway_name = 'myAppGateway'
-var vnet_prefix = '10.0.0.0/16'
-var ag_subnet_prefix = '10.0.0.0/24'
-var backend_subnet_prefix = '10.0.1.0/24'
-var AppGW_AppFW_Pol_name = 'WafPol01'
+var publicIPAddress_name = 'pip-appgw-'
+var nsg_name = 'nsg-appgw-'
+var applicationGateways_myAppGateway_name = 'agw-appgw-1'
+var vnet_prefix = '10.100.0.0/16'
+var ag_subnet_prefix = '10.100.0.0/24'
+var backend_subnet_prefix = '10.100.1.0/24'
+var AppGW_AppFW_Pol_name = 'WafPolicy01'
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2021-08-01' = [for i in range(0, 2): {
   name: '${nsg_name}${(i + 1)}'
@@ -127,7 +127,7 @@ resource myVM 'Microsoft.Compute/virtualMachines@2021-11-01' = [for i in range(0
     networkProfile: {
       networkInterfaces: [
         {
-          id: resourceId('Microsoft.Network/networkInterfaces', '${myNic_name}${(i + 1)}')
+          id: resourceId('Microsoft.Network/networkInterfaces', '${nic_name}${(i + 1)}')
         }
       ]
     }
@@ -161,7 +161,7 @@ resource myAppGateway 'Microsoft.Network/applicationGateways@2021-08-01' = {
     sku: {
       name: 'WAF_v2'
       tier: 'WAF_v2'
-      capacity: 2
+      capacity: 1
     }
     gatewayIPConfigurations: [
       {
@@ -311,7 +311,7 @@ resource AppGW_AppFW_Pol 'Microsoft.Network/ApplicationGatewayWebApplicationFire
 }
 
 resource myNic 'Microsoft.Network/networkInterfaces@2021-08-01' = [for i in range(0, 2): {
-  name: '${myNic_name}${(i + 1)}'
+  name: '${nic_name}${(i + 1)}'
   location: location
   properties: {
     ipConfigurations: [
